@@ -1,0 +1,8 @@
+{
+  "date": "2026-04-23",
+  "topic": "AI Agent 工具调用",
+  "durationMinutes": 90,
+  "summary": "学习了如何用 CLI 命令作为 Agent 的工具边界，并把自然语言记录转成结构化 JSON。",
+  "skills": ["Agent", "CLI", "JSON schema"],
+  "source": "timeline-for-agent 项目源码"
+}

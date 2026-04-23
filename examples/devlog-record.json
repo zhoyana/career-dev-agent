@@ -1,0 +1,18 @@
+{
+  "date": "2026-04-23",
+  "project": "career-dev-agent",
+  "summary": "从零实现了学习记录、开发日志、Git inspect 和周报生成的 CLI MVP。",
+  "durationMinutes": 150,
+  "skills": ["Node.js", "Git", "CLI", "Agent 工程"],
+  "bugs": [
+    {
+      "title": "一开始命令入口没有实现子命令分发",
+      "cause": "项目刚创建，index.js 只有占位错误",
+      "solution": "在 src/index.js 中按 command 分发到不同 app 模块"
+    }
+  ],
+  "tests": {
+    "command": "npm run check",
+    "result": "passed"
+  }
+}

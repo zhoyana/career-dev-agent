@@ -1,0 +1,23 @@
+{
+  "name": "career-dev-agent",
+  "version": "0.1.0",
+  "description": "学习版：AI 求职学习与代码开发日志 Agent 的本地 CLI 工具。",
+  "private": true,
+  "type": "commonjs",
+  "bin": {
+    "career-dev-agent": "./bin/career-dev-agent.js"
+  },
+  "scripts": {
+    "help": "node ./bin/career-dev-agent.js help",
+    "inspect-git": "node ./bin/career-dev-agent.js inspect-git",
+    "write-learning": "node ./bin/career-dev-agent.js write-learning",
+    "write-devlog": "node ./bin/career-dev-agent.js write-devlog",
+    "read": "node ./bin/career-dev-agent.js read",
+    "weekly-report": "node ./bin/career-dev-agent.js weekly-report",
+    "check": "node --check ./bin/career-dev-agent.js && node --check ./src/index.js && node --check ./src/app/inspect-git-cli.js && node --check ./src/app/read-day-cli.js && node --check ./src/app/weekly-report-cli.js && node --check ./src/app/write-devlog-cli.js && node --check ./src/app/write-learning-cli.js && node --check ./src/infra/cli-utils.js && node --check ./src/infra/config.js && node --check ./src/infra/git-inspector.js && node --check ./src/infra/store.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {}
+}
