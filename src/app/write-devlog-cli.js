@@ -8,6 +8,30 @@ const { addRecord } = require("../infra/store");
 const { getIsoWeek, parseArgs, readStdinJson, todayDateString } = require("../infra/cli-utils");
 const { inspectGitRepo } = require("../infra/git-inspector");
 
+function buildDevlogRecord(input, options) {
+    const date = String(input.date || options.date || todayDateString()).trim();
+    const git = options.repo ? inspectGitRepo(options.repo) : null;
+
+    const record = {
+      id: `devlog:${date}:${Date.now()}`,
+      type: "devlog",
+      date,
+      week: getIsoWeek(date),
+      createdAt: new Date().toISOString(),
+      project: String(input.project || "").trim(),
+      summary: String(input.summary || "").trim(),
+      durationMinutes: Number(input.durationMinutes || 0),
+      skills: Array.isArray(input.skills) ? input.skills : [],
+      bugs: Array.isArray(input.bugs) ? input.bugs : [],
+      tests: input.tests && typeof input.tests === "object" ? input.tests : null,
+      git,
+    };
+
+    validateDevlogRecord(record);
+    return record;
+  }
+
+
 async function runWriteDevlogCommand(config) {
   const options = parseArgs(process.argv.slice(3));
 
@@ -15,39 +39,7 @@ async function runWriteDevlogCommand(config) {
     throw new Error("write-devlog currently requires --stdin");
   }
 
-  const input = await readStdinJson();
-  const date = String(input.date || options.date || todayDateString()).trim();
-
-  // 如果用户传了 --repo，就自动读取 Git 仓库状态。
-  // 如果不传 --repo，也允许只写手动开发日志。
-  const git = options.repo ? inspectGitRepo(options.repo) : null;
-
-  const record = {
-    id: `devlog:${date}:${Date.now()}`,
-    type: "devlog",
-    date,
-    week: getIsoWeek(date),
-    createdAt: new Date().toISOString(),
-
-    project: String(input.project || "").trim(),
-    summary: String(input.summary || "").trim(),
-    durationMinutes: Number(input.durationMinutes || 0),
-    skills: Array.isArray(input.skills) ? input.skills : [],
-
-    // bugs 用来记录今天遇到和解决的问题。
-    // 先允许用户手写数组，后面可以让 LLM 自动生成。
-    bugs: Array.isArray(input.bugs) ? input.bugs : [],
-
-    // tests 用来记录测试命令和结果。
-    // 例如：
-    //   { "command": "npm test", "result": "passed" }
-    tests: input.tests && typeof input.tests === "object" ? input.tests : null,
-
-    // git 是客观仓库信息，来自 inspectGitRepo。
-    git,
-  };
-
-  validateDevlogRecord(record);
+  const record =buildDevlogRecord(input,options);
   addRecord(config, record);
 
   console.log(JSON.stringify({
@@ -71,4 +63,4 @@ function validateDevlogRecord(record) {
   }
 }
 
-module.exports = { runWriteDevlogCommand };
+module.exports = { buildDevlogRecord,runWriteDevlogCommand };

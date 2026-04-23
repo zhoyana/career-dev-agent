@@ -9,6 +9,7 @@ const { runWriteDevlogCommand } = require("./app/write-devlog-cli");
 const { runWriteLearningCommand } = require("./app/write-learning-cli");
 const { runDeleteRecordCommand } = require("./app/delete-record-cli");
 const { runListRecordsCommand } = require("./app/list-records-cli");
+ const { runAgentCommand } = require("./app/agent-cli");
 
 
 const { runStatsCommand } = require("./app/stats-cli");
@@ -25,6 +26,7 @@ Commands:
   help            显示帮助信息
   delete          按 id 删除一条记录
   list            列出全部记录，可用 --type 过滤
+  agent           从自然语言生成开发日志
 
 
   
@@ -35,7 +37,7 @@ Examples:
   node ./bin/career-dev-agent.js write-learning --stdin
   node ./bin/career-dev-agent.js read --date 2026-04-23
   node ./bin/career-dev-agent.js list --type devlog
-
+  node ./bin/career-dev-agent.js agent --stdin
 `);
 }
 
@@ -83,6 +85,10 @@ async function main() {
     await runListRecordsCommand(config);
     return;
   }
+  if (command === "agent") {
+    await runAgentCommand(config);
+    return;
+  }
 
 
   if (command === "stats") {
@@ -99,6 +105,7 @@ async function main() {
     await runDeleteRecordCommand(config);
     return;
   }
+
 
 
 

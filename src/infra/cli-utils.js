@@ -93,5 +93,6 @@ module.exports = {
   parseArgs,
   readStdinJson,
   requireOption,
+  readStdinText,
   todayDateString,
 };
