@@ -16,7 +16,8 @@
     "stats": "node ./bin/career-dev-agent.js stats",
     "weekly-report": "node ./bin/career-dev-agent.js weekly-report",
     "delete": "node ./bin/career-dev-agent.js delete",
-    "check": "node --check ./bin/career-dev-agent.js && node --check ./src/index.js && node --check ./src/app/inspect-git-cli.js && node --check ./src/app/read-day-cli.js && node --check ./src/app/weekly-report-cli.js && node --check ./src/app/write-devlog-cli.js && node --check ./src/app/write-learning-cli.js && node --check ./src/infra/cli-utils.js && node --check ./src/infra/config.js && node --check ./src/infra/git-inspector.js && node --check ./src/infra/store.js node --check ./src/app/stats-cli.js node --check ./src/app/delete-record-cli.js"
+    "list": "node ./bin/career-dev-agent.js list",
+    "check": "node --check ./bin/career-dev-agent.js && node --check ./src/index.js && node --check ./src/app/inspect-git-cli.js && node --check ./src/app/read-day-cli.js && node --check ./src/app/weekly-report-cli.js && node --check ./src/app/write-devlog-cli.js && node --check ./src/app/write-learning-cli.js && node --check ./src/infra/cli-utils.js && node --check ./src/infra/config.js && node --check ./src/infra/git-inspector.js && node --check ./src/infra/store.js node --check ./src/app/stats-cli.js node --check ./src/app/delete-record-cli.js node --check ./src/app/list-records-cli.js"
   },
   "engines": {
     "node": ">=20"

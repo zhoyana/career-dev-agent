@@ -8,6 +8,8 @@ const { runWeeklyReportCommand } = require("./app/weekly-report-cli");
 const { runWriteDevlogCommand } = require("./app/write-devlog-cli");
 const { runWriteLearningCommand } = require("./app/write-learning-cli");
 const { runDeleteRecordCommand } = require("./app/delete-record-cli");
+const { runListRecordsCommand } = require("./app/list-records-cli");
+
 
 const { runStatsCommand } = require("./app/stats-cli");
 function printHelp() {
@@ -22,6 +24,8 @@ Commands:
   weekly-report   生成一份周报 Markdown
   help            显示帮助信息
   delete          按 id 删除一条记录
+  list            列出全部记录，可用 --type 过滤
+
 
   
 
@@ -30,6 +34,8 @@ Examples:
   node ./bin/career-dev-agent.js inspect-git --repo /path/to/repo
   node ./bin/career-dev-agent.js write-learning --stdin
   node ./bin/career-dev-agent.js read --date 2026-04-23
+  node ./bin/career-dev-agent.js list --type devlog
+
 `);
 }
 
@@ -73,6 +79,12 @@ async function main() {
     return;
   }
 
+  if (command === "list") {
+    await runListRecordsCommand(config);
+    return;
+  }
+
+
   if (command === "stats") {
     await runStatsCommand(config);
     return;
@@ -87,6 +99,8 @@ async function main() {
     await runDeleteRecordCommand(config);
     return;
   }
+
+
 
 
   throw new Error(`Unknown command: ${command}`);
