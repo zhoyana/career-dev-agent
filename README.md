@@ -1,3 +1,4 @@
+
 # Career Dev Agent
 
 这是一个学习版项目：从零构建“AI 求职学习 + 代码开发日志 Agent”的本地 CLI 工具。
@@ -55,3 +56,5 @@ node ./bin/career-dev-agent.js weekly-report --week 2026-W17
 ```
 
 你可以直接打开这个 JSON 文件观察数据结构。
+
+## learning Note
