@@ -7,7 +7,7 @@ const { runReadDayCommand } = require("./app/read-day-cli");
 const { runWeeklyReportCommand } = require("./app/weekly-report-cli");
 const { runWriteDevlogCommand } = require("./app/write-devlog-cli");
 const { runWriteLearningCommand } = require("./app/write-learning-cli");
-
+const { runStatsCommand } = require("./app/stats-cli");
 function printHelp() {
   console.log(`
 Usage: career-dev-agent <command>
@@ -65,6 +65,11 @@ async function main() {
 
   if (command === "read") {
     await runReadDayCommand(config);
+    return;
+  }
+
+  if (command === "stats") {
+    await runStatsCommand(config);
     return;
   }
 
