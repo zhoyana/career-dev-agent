@@ -92,10 +92,32 @@ function listRecordsByWeek(config, week) {
   });
 }
 
+function deleteRecordById(config, id) {
+    const data = readData(config);
+    const normalizedId = String(id || "").trim();
+
+    const beforeCount = data.records.length;
+
+    data.records = data.records.filter((record) => {
+      return record.id !== normalizedId;
+    });
+
+    const afterCount = data.records.length;
+    const deleted = beforeCount !== afterCount;
+
+    if (deleted) {
+      writeData(config, data);
+    }
+
+    return deleted;
+  }
+
+
 module.exports = {
   addRecord,
   listRecordsByDate,
   listRecordsByWeek,
+  deleteRecordById,
   readData,
   writeData,
 };

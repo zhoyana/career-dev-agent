@@ -7,6 +7,8 @@ const { runReadDayCommand } = require("./app/read-day-cli");
 const { runWeeklyReportCommand } = require("./app/weekly-report-cli");
 const { runWriteDevlogCommand } = require("./app/write-devlog-cli");
 const { runWriteLearningCommand } = require("./app/write-learning-cli");
+const { runDeleteRecordCommand } = require("./app/delete-record-cli");
+
 const { runStatsCommand } = require("./app/stats-cli");
 function printHelp() {
   console.log(`
@@ -19,6 +21,9 @@ Commands:
   read            按日期读取记录
   weekly-report   生成一份周报 Markdown
   help            显示帮助信息
+  delete          按 id 删除一条记录
+
+  
 
 Examples:
   node ./bin/career-dev-agent.js help
@@ -77,6 +82,12 @@ async function main() {
     await runWeeklyReportCommand(config);
     return;
   }
+
+  if (command === "delete") {
+    await runDeleteRecordCommand(config);
+    return;
+  }
+
 
   throw new Error(`Unknown command: ${command}`);
 }
