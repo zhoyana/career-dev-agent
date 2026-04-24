@@ -1,0 +1,317 @@
+<!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Career Dev Agent Dashboard</title>
+    <style>
+      :root {
+        --bg: #f4f1ea;
+        --panel: #fffdf8;
+        --panel-soft: #f8f4ec;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --line: #ded6c8;
+        --accent: #8c5e34;
+        --accent-soft: #efe2d3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        background: linear-gradient(180deg, #efe7db 0%, #f8f5ef 100%);
+        color: var(--text);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .container {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      .hero {
+        margin-bottom: 24px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--panel);
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 36px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .section {
+        margin-bottom: 24px;
+      }
+
+      .section h2 {
+        margin: 0 0 12px;
+        font-size: 22px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+      }
+
+      .label {
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .value {
+        font-size: 28px;
+        font-weight: 700;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+
+      .panel-body {
+        padding: 16px;
+      }
+
+      .empty {
+        padding: 16px;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        background: var(--panel-soft);
+        color: var(--muted);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        background: #f6efe5;
+        font-size: 13px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      li.skill-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      li.skill-item:last-child {
+        border-bottom: none;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .footer-note {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          padding: 16px;
+        }
+
+        .hero h1 {
+          font-size: 28px;
+        }
+
+        th,
+        td {
+          padding: 10px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="hero">
+        <h1>Career Dev Agent Dashboard</h1>
+        <p>Last updated: 2026-04-24 10:49 UTC</p>
+      </div>
+
+      <div class="section">
+        <h2>Overview</h2>
+        <div class="cards">
+          <div class="card"><div class="label">Total Records</div><div
+  class="value">8</div></div>
+          <div class="card"><div class="label">Learning Records</div><div
+  class="value">4</div></div>
+          <div class="card"><div class="label">Devlog Records</div><div
+  class="value">4</div></div>
+          <div class="card"><div class="label">Learning Minutes</div><div
+  class="value">265</div></div>
+          <div class="card"><div class="label">Devlog Minutes</div><div
+  class="value">415</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Recent 7 Days</h2>
+        <div class="panel">
+          <div class="panel-body">
+            
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Record Count</th>
+              <th>Learning Minutes</th>
+              <th>Devlog Minutes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>2026-04-18</td><td>2</
+  td><td>60</td><td>90</td></tr>
+<tr><td>2026-04-19</td><td>1</
+  td><td>75</td><td>0</td></tr>
+<tr><td>2026-04-20</td><td>1</
+  td><td>0</td><td>120</td></tr>
+<tr><td>2026-04-21</td><td>1</
+  td><td>80</td><td>0</td></tr>
+<tr><td>2026-04-22</td><td>1</
+  td><td>0</td><td>110</td></tr>
+<tr><td>2026-04-23</td><td>1</
+  td><td>50</td><td>0</td></tr>
+<tr><td>2026-04-24</td><td>1</
+  td><td>0</td><td>95</td></tr>
+          </tbody>
+        </table>
+      
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Recent Records</h2>
+        <div class="panel">
+          <div class="panel-body">
+            
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Summary</th>
+              <th>Minutes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>2026-04-24</td><td>devlog</td><td>career-dev-agent</td><td>增强 dashboard MVP，补充最近7天趋势、空状态和默认兜底文案，让页面更适合面试演示。</
+  td><td>95</td></tr>
+<tr><td>2026-04-23</td><td>learning</td><td>前端表格与空状态设计</td><td>学习如何让 dashboard 在空数据和正常数据下都能稳定展示。</
+  td><td>50</td></tr>
+<tr><td>2026-04-22</td><td>devlog</td><td>career-dev-agent</td><td>新增 build-dashboard 命令，能够读取本地 records 并生成静态 dashboard 页面。</
+  td><td>110</td></tr>
+<tr><td>2026-04-21</td><td>learning</td><td>Dashboard 信息架构</td><td>学习如何把记录数据整理成 overview、trend、recent records 和 top skills 四类展示。</
+  td><td>80</td></tr>
+<tr><td>2026-04-20</td><td>devlog</td><td>career-dev-agent</td><td>补充 list、read 和 weekly-report 基础链路，让记录系统形成最小闭环。</
+  td><td>120</td></tr>
+<tr><td>2026-04-19</td><td>learning</td><td>结构化 JSON 记录设计</td><td>学习如何把自然语言输入映射为统一的记录结构，便于后续统计和查询。</
+  td><td>75</td></tr>
+<tr><td>2026-04-18</td><td>devlog</td><td>career-dev-agent</td><td>实现命令分发入口，整理 app 层和 infra 层的职责边界。</
+  td><td>90</td></tr>
+<tr><td>2026-04-18</td><td>learning</td><td>Node.js CLI 参数解析</td><td>学习 parseArgs 和 stdin 输入的基本处理方式，为 CLI 命令设计做准备。</
+  td><td>60</td></tr>
+          </tbody>
+        </table>
+      
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Top Skills</h2>
+        <div class="panel">
+          <div class="panel-body">
+            
+        <ul>
+          <li class="skill-item"><span>Node.js</span><span
+  class="badge">5</span></li>
+<li class="skill-item"><span>HTML</span><span
+  class="badge">4</span></li>
+<li class="skill-item"><span>CLI</span><span
+  class="badge">3</span></li>
+<li class="skill-item"><span>Dashboard</span><span
+  class="badge">3</span></li>
+<li class="skill-item"><span>CSS</span><span
+  class="badge">2</span></li>
+<li class="skill-item"><span>UX</span><span
+  class="badge">2</span></li>
+<li class="skill-item"><span>Agent</span><span
+  class="badge">1</span></li>
+<li class="skill-item"><span>Architecture</span><span
+  class="badge">1</span></li>
+<li class="skill-item"><span>JavaScript</span><span
+  class="badge">1</span></li>
+<li class="skill-item"><span>JSON</span><span
+  class="badge">1</span></li>
+        </ul>
+      
+          </div>
+        </div>
+      </div>
+
+      <p class="footer-note">This dashboard summarizes your structured learning and development records.</p>
+    </div>
+  </body>
+  </html>

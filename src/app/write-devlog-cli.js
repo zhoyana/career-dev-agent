@@ -1,14 +1,14 @@
 // write-devlog-cli.js 负责写入“代码开发日志”。
-//
-// 用法示例：
-//   echo '{"project":"career-dev-agent","summary":"实现 Git inspect 命令","durationMinutes":120}' \
-//     | node ./bin/career-dev-agent.js write-devlog --repo /home/jovyan/career-dev-agent --stdin
+  //
+  // 用法示例：
+  //   echo '{"project":"career-dev-agent","summary":"实现 Git inspect 命令","durationMinutes":120}' \
+  //     | node ./bin/career-dev-agent.js write-devlog --repo /home/jovyan/career-dev-agent--stdin
 
-const { addRecord } = require("../infra/store");
-const { getIsoWeek, parseArgs, readStdinJson, todayDateString } = require("../infra/cli-utils");
-const { inspectGitRepo } = require("../infra/git-inspector");
+  const { addRecord } = require("../infra/store");
+  const { getIsoWeek, parseArgs, readStdinJson, todayDateString } = require("../infra/cli-utils");
+  const { inspectGitRepo } = require("../infra/git-inspector");
 
-function buildDevlogRecord(input, options) {
+  function buildDevlogRecord(input, options) {
     const date = String(input.date || options.date || todayDateString()).trim();
     const git = options.repo ? inspectGitRepo(options.repo) : null;
 
@@ -31,36 +31,39 @@ function buildDevlogRecord(input, options) {
     return record;
   }
 
+  async function runWriteDevlogCommand(config) {
+    const options = parseArgs(process.argv.slice(3));
 
-async function runWriteDevlogCommand(config) {
-  const options = parseArgs(process.argv.slice(3));
+    if (!options.stdin) {
+      throw new Error("write-devlog currently requires --stdin");
+    }
 
-  if (!options.stdin) {
-    throw new Error("write-devlog currently requires --stdin");
+    const input = await readStdinJson();
+    const record = buildDevlogRecord(input, options);
+
+    addRecord(config, record);
+
+    console.log(JSON.stringify({
+      ok: true,
+      id: record.id,
+      type: record.type,
+      date: record.date,
+      gitAttached: Boolean(record.git),
+    }, null, 2));
   }
 
-  const record =buildDevlogRecord(input,options);
-  addRecord(config, record);
+  function validateDevlogRecord(record) {
+    if (!record.project) {
+      throw new Error("devlog record requires project");
+    }
 
-  console.log(JSON.stringify({
-    ok: true,
-    id: record.id,
-    type: record.type,
-    date: record.date,
-    gitAttached: Boolean(record.git),
-  }, null, 2));
-}
+    if (!record.summary) {
+      throw new Error("devlog record requires summary");
+    }
 
-function validateDevlogRecord(record) {
-  if (!record.project) {
-    throw new Error("devlog record requires project");
+    if (!Number.isFinite(record.durationMinutes) || record.durationMinutes <= 0) {
+      throw new Error("devlog record requires positive durationMinutes");
+    }
   }
-  if (!record.summary) {
-    throw new Error("devlog record requires summary");
-  }
-  if (!Number.isFinite(record.durationMinutes) || record.durationMinutes <= 0) {
-    throw new Error("devlog record requires positive durationMinutes");
-  }
-}
 
-module.exports = { buildDevlogRecord,runWriteDevlogCommand };
+  module.exports = { buildDevlogRecord, runWriteDevlogCommand };
