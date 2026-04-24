@@ -14,13 +14,17 @@ function readConfig() {
   const stateDir = process.env.CAREER_DEV_AGENT_STATE_DIR
     || path.join(homeDir, ".career-dev-agent");
 
+
+
   return {
     stateDir,
-
-    // 所有学习日志、开发日志暂时都存在这一个 JSON 文件里。
     dataFile: process.env.CAREER_DEV_AGENT_DATA_FILE
       || path.join(stateDir, "career-dev-agent-data.json"),
+    //dash board放在哪里
+    siteDir: process.env.CAREER_DEV_AGENT_SITE_DIR
+      || path.join(stateDir, "site"),
   };
+
 }
 
 module.exports = { readConfig };

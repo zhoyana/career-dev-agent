@@ -75,4 +75,4 @@
     ].join("\n");
   }
 
-  module.exports = { extractCareerRecordWithLLM };
+  module.exports = { extractCareerRecordWithLLM,createOpenAIClient };
