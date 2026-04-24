@@ -19,8 +19,8 @@
     "list": "node ./bin/career-dev-agent.js list",
     "agent": "node ./bin/career-dev-agent.js agent",
     "agent-llm": "node ./bin/career-dev-agent.js agent-llm",
-
-    "check": "node --check ./bin/career-dev-agent.js && node --check ./src/index.js && node --check ./src/app/inspect-git-cli.js && node --check ./src/app/read-day-cli.js && node --check ./src/app/weekly-report-cli.js && node --check ./src/app/write-devlog-cli.js && node --check ./src/app/write-learning-cli.js && node --check ./src/infra/cli-utils.js && node --check ./src/infra/config.js && node --check ./src/infra/git-inspector.js && node --check ./src/infra/store.js node --check ./src/app/stats-cli.js node --check ./src/app/delete-record-cli.js node --check ./src/app/list-records-cli.js node --check ./src/app/agent-cli.js node --check ./src/app/agent-llm-cli.js && node --check ./src/infra/openai-client.js"
+    "update": "node ./bin/career-dev-agent.js update",
+    "check": "node --check ./bin/career-dev-agent.js && node --check ./src/index.js && node --check ./src/app/inspect-git-cli.js && node --check ./src/app/read-day-cli.js && node --check ./src/app/weekly-report-cli.js && node --check ./src/app/write-devlog-cli.js && node --check ./src/app/write-learning-cli.js && node --check ./src/infra/cli-utils.js && node --check ./src/infra/config.js && node --check ./src/infra/git-inspector.js && node --check ./src/infra/store.js && node --check ./src/app/stats-cli.js && node --check ./src/app/delete-record-cli.js && node --check ./src/app/list-records-cli.js && node --check ./src/app/agent-cli.js && node --check ./src/app/agent-llm-cli.js && node --check ./src/infra/openai-client.js && node --check ./src/app/update-record-cli.js"
   },
   "engines": {
     "node": ">=20"

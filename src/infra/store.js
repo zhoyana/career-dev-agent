@@ -92,6 +92,30 @@ function listRecordsByWeek(config, week) {
   });
 }
 
+function updateRecordById(config, id, updater) {
+    const data = readData(config);
+    const normalizedId = String(id || "").trim();
+
+    let updatedRecord = null;
+    //map遍历records 不是
+    data.records = data.records.map((record) => {
+      if (record.id !== normalizedId) {
+        return record;
+      }
+
+      updatedRecord = updater(record);
+      return updatedRecord;
+    });
+
+    if (!updatedRecord) {
+      return null;
+    }
+
+    writeData(config, data);
+    return updatedRecord;
+  }
+
+
 function deleteRecordById(config, id) {
     const data = readData(config);
     const normalizedId = String(id || "").trim();
@@ -120,4 +144,5 @@ module.exports = {
   deleteRecordById,
   readData,
   writeData,
+  updateRecordById,
 };

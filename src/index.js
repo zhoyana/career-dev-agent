@@ -11,6 +11,7 @@ const { runDeleteRecordCommand } = require("./app/delete-record-cli");
 const { runListRecordsCommand } = require("./app/list-records-cli");
 const { runAgentCommand } = require("./app/agent-cli");
 const { runAgentLlmCommand } = require("./app/agent-llm-cli");
+const { runUpdateRecordCommand } = require("./app/update-record-cli");
 
 
 const { runStatsCommand } = require("./app/stats-cli");
@@ -29,6 +30,7 @@ Commands:
   list            列出全部记录，可用 --type 过滤
   agent           从自然语言生成开发日志
   agent           使用openai从自然语言生成开发日记
+  update          按id更新记录
   
 
 
@@ -42,6 +44,8 @@ Examples:
   node ./bin/career-dev-agent.js list --type devlog
   node ./bin/career-dev-agent.js agent --stdin
   node ./bin/career-dev-agent.js agent-llm --stdin --dry-run
+  node ./bin/career-dev-agent.js update --id RECORD_ID --stdin
+
 
 `);
 }
@@ -99,6 +103,12 @@ async function main() {
     await  runAgentLlmCommand(config);
     return ;
   }
+
+  if (command === "update") {
+    await runUpdateRecordCommand(config);
+    return;
+  }
+
 
 
   if (command === "stats") {
