@@ -7,6 +7,17 @@
 const { addRecord } = require("../infra/store");
 const { getIsoWeek, parseArgs, readStdinJson, todayDateString } = require("../infra/cli-utils");
 
+function buildLearningRecord(input, options) {
+    const date = String(input.date || options.date || todayDateString()).trim();
+
+    const record = buildLearningRecord(input, options);
+
+    validateLearningRecord(record);
+    return record;
+  }
+
+
+
 async function runWriteLearningCommand(config) {
   const options = parseArgs(process.argv.slice(3));
 
@@ -59,4 +70,4 @@ function validateLearningRecord(record) {
   }
 }
 
-module.exports = { runWriteLearningCommand };
+module.exports = { buildLearningRecord,runWriteLearningCommand };

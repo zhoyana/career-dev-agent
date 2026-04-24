@@ -9,7 +9,8 @@ const { runWriteDevlogCommand } = require("./app/write-devlog-cli");
 const { runWriteLearningCommand } = require("./app/write-learning-cli");
 const { runDeleteRecordCommand } = require("./app/delete-record-cli");
 const { runListRecordsCommand } = require("./app/list-records-cli");
- const { runAgentCommand } = require("./app/agent-cli");
+const { runAgentCommand } = require("./app/agent-cli");
+const { runAgentLlmCommand } = require("./app/agent-llm-cli");
 
 
 const { runStatsCommand } = require("./app/stats-cli");
@@ -27,6 +28,7 @@ Commands:
   delete          按 id 删除一条记录
   list            列出全部记录，可用 --type 过滤
   agent           从自然语言生成开发日志
+  agent           使用openai从自然语言生成开发日记
 
 
   
@@ -88,6 +90,11 @@ async function main() {
   if (command === "agent") {
     await runAgentCommand(config);
     return;
+  }
+
+  if (command ==="agent-llm"){
+    await  runAgentLlmCommand(config);
+    return ;
   }
 
 
