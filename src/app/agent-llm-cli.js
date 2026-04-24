@@ -1,11 +1,10 @@
-// agent-llm-cli.js 是真正调用 OpenAI 的最小 LLM Agent。
+// agent-llm-cli.js 是调用 OpenAI 的 Agent v2 入口。
+  // 当前阶段先让它输出并校验结构化 action，下一步再接 executor。
 
-  const { addRecord } = require("../infra/store");
   const { parseArgs, readStdinText } = require("../infra/cli-utils");
-  const { extractCareerRecordWithLLM } = require("../infra/openai-client");
-  const { buildDevlogRecord } = require("./write-devlog-cli");
-  const { buildLearningRecord } = require("./write-learning-cli");
-  const { validateAndNormalizeLlmRecord } = require("../infra/llm-record-validator");
+  const { extractAgentActionWithLLM } = require("../infra/openai-client");
+  const { executeAgentAction } = require("./agent-action-executor");
+  const { validateAndNormalizeAgentAction } = require("../infra/agent-action-validator");
 
   async function runAgentLlmCommand(config) {
     const options = parseArgs(process.argv.slice(3));
@@ -15,31 +14,26 @@
     }
 
     const text = await readStdinText();
-    const extracted = await extractCareerRecordWithLLM(text);
-    const validated = validateAndNormalizeLlmRecord(extracted);
+    const extracted = await extractAgentActionWithLLM(text);
+    const action = validateAndNormalizeAgentAction(extracted);
 
-    let record = null;
-
-    if (validated.intent === "learning") {
-      record = buildLearningRecord(validated, options);
-    } else if (validated.intent === "devlog") {
-      record = buildDevlogRecord(validated, options);
-    } else {
-      throw new Error(`Unknown LLM intent: ${validated.intent}`);
-    }
-
-
-    if (!options.dryRun) {
-    addRecord(config, record);
+    if (options.dryRun) {
+      console.log(JSON.stringify({
+        ok: true,
+        dryRun: true,
+        action,
+      }, null, 2));
+      return;
   }
+
+  const executionResult = executeAgentAction(config, action, options);
 
   console.log(JSON.stringify({
     ok: true,
-    intent: validated.intent,
-    dryRun: Boolean(options.dryRun),
-    record,
+    dryRun: false,
+    action,
+    execution: executionResult,
   }, null, 2));
-
 
   }
 

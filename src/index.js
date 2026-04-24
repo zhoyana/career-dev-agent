@@ -31,7 +31,7 @@ Commands:
   delete          按 id 删除一条记录
   list            列出全部记录，可用 --type 过滤
   agent           从自然语言生成开发日志
-  agent           使用openai从自然语言生成开发日记
+  agent-llm       使用 OpenAI 从自然语言生成并执行 action
   update          按id更新记录
   import-chat     把一段聊天记录转为多条记录
   build-dashboard 创建dashboard
