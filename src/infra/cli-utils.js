@@ -12,10 +12,12 @@ function parseArgs(args) {
   for (let index = 0; index < args.length; index += 1) {
     const token = args[index];
 
-    if (token === "--stdin") {
-      options.stdin = true;
+    if (token === "--stdin" || token === "--dry-run") {
+      const key = token.slice(2).replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+      options[key] = true;
       continue;
     }
+
 
     if (token.startsWith("--")) {
       const key = token.slice(2);

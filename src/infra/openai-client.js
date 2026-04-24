@@ -40,7 +40,19 @@
     });
 
     const outputText = response.output_text;
+
+  try {
     return JSON.parse(outputText);
+  } catch (error) {
+    throw new Error(
+      [
+        "LLM did not return valid JSON.",
+        "Raw output:",
+        outputText,
+      ].join("\n")
+    );
+  }
+
   }
 
   function buildExtractionPrompt(text) {

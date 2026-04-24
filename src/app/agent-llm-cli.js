@@ -26,13 +26,17 @@
       throw new Error(`Unknown LLM intent: ${extracted.intent}`);
     }
 
+    if (!options.dryRun) {
     addRecord(config, record);
+  }
 
-    console.log(JSON.stringify({
-      ok: true,
-      intent: extracted.intent,
-      record,
-    }, null, 2));
+  console.log(JSON.stringify({
+    ok: true,
+    intent: extracted.intent,
+    dryRun: Boolean(options.dryRun),
+    record,
+  }, null, 2));
+
   }
 
   module.exports = { runAgentLlmCommand };

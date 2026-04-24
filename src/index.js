@@ -29,6 +29,7 @@ Commands:
   list            列出全部记录，可用 --type 过滤
   agent           从自然语言生成开发日志
   agent           使用openai从自然语言生成开发日记
+  
 
 
   
@@ -40,6 +41,8 @@ Examples:
   node ./bin/career-dev-agent.js read --date 2026-04-23
   node ./bin/career-dev-agent.js list --type devlog
   node ./bin/career-dev-agent.js agent --stdin
+  node ./bin/career-dev-agent.js agent-llm --stdin --dry-run
+
 `);
 }
 
