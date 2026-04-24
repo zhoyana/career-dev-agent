@@ -5,6 +5,7 @@
   const { extractCareerRecordWithLLM } = require("../infra/openai-client");
   const { buildDevlogRecord } = require("./write-devlog-cli");
   const { buildLearningRecord } = require("./write-learning-cli");
+  const { validateAndNormalizeLlmRecord } = require("../infra/llm-record-validator");
 
   async function runAgentLlmCommand(config) {
     const options = parseArgs(process.argv.slice(3));
@@ -15,16 +16,18 @@
 
     const text = await readStdinText();
     const extracted = await extractCareerRecordWithLLM(text);
+    const validated = validateAndNormalizeLlmRecord(extracted);
 
     let record = null;
 
-    if (extracted.intent === "learning") {
-      record = buildLearningRecord(extracted, options);
-    } else if (extracted.intent === "devlog") {
-      record = buildDevlogRecord(extracted, options);
+    if (validated.intent === "learning") {
+      record = buildLearningRecord(validated, options);
+    } else if (validated.intent === "devlog") {
+      record = buildDevlogRecord(validated, options);
     } else {
-      throw new Error(`Unknown LLM intent: ${extracted.intent}`);
+      throw new Error(`Unknown LLM intent: ${validated.intent}`);
     }
+
 
     if (!options.dryRun) {
     addRecord(config, record);
@@ -32,10 +35,11 @@
 
   console.log(JSON.stringify({
     ok: true,
-    intent: extracted.intent,
+    intent: validated.intent,
     dryRun: Boolean(options.dryRun),
     record,
   }, null, 2));
+
 
   }
 
