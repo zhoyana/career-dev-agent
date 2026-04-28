@@ -1,5 +1,6 @@
 // structured-memory-store.js 负责存储结构化长期记忆。
   // 当前版本提供：写入门控、去重、压缩记忆、最近记忆列表、关键词搜索、按 id 获取详情。
+  // 修复点：同 group 的 compressed memory 会覆盖旧版本；展示时按 group 去重。
 
   const fs = require("fs");
   const path = require("path");
@@ -227,22 +228,28 @@
     const relatedRecordIds = collectRelatedRecordIds(records);
     const toolNames = uniqueStrings((result.steps || []).map((step) => step.toolName));
 
-    return {
-      id: `memory:${Date.now()}`,
-      memoryType,
-      title,
-      summary: truncateText(result.finalAnswer || "", 400),
-      userInput: truncateText(userInput || "", 200),
-      toolNames,
-      relatedRecordIds,
-      tags,
-      sourceSessionId: sessionId,
-      stepCount: Number(result.stepCount || 0),
-      createdAt: now,
-      isCompressed: false,
-      compressedFromCount: 0,
-      sourceMemoryIds: [],
-    };
+    const entry = {
+    id: `memory:${Date.now()}`,
+    memoryType,
+    title,
+    summary: truncateText(result.finalAnswer || "", 400),
+    userInput: truncateText(userInput || "", 200),
+    toolNames,
+    relatedRecordIds,
+    tags,
+    sourceSessionId: sessionId,
+    stepCount: Number(result.stepCount || 0),
+    createdAt: now,
+    isCompressed: false,
+    compressedFromCount: 0,
+    sourceMemoryIds: [],
+    groupKey: "",
+  };
+
+  entry.groupKey = buildCompressionGroupKey(entry);
+
+  return entry;
+
   }
 
   function isDuplicateMemory(existingMemory, nextMemory) {
@@ -294,58 +301,7 @@
       sourceMemoryIds: Array.isArray(memory.sourceMemoryIds)
         ? memory.sourceMemoryIds
         : [],
-    };
-  }
-
-  function listRecentStructuredMemories(config, options = {}) {
-    const limit = Math.max(1, Math.min(Number(options.limit || 5), 20));
-    const data = readStructuredMemoryData(config);
-    const memories = sortMemoriesByPriority(data.memories).slice(0, limit);
-
-    return {
-      count: memories.length,
-      memories: memories.map(summarizeMemory),
-    };
-  }
-
-  function searchStructuredMemories(config, query, options = {}) {
-    const normalizedQuery = String(query || "").trim().toLowerCase();
-    const limit = Math.max(1, Math.min(Number(options.limit || 10), 20));
-    const data = readStructuredMemoryData(config);
-
-    const memories = sortMemoriesByPriority(
-      data.memories.filter((memory) => {
-        const text = [
-          memory.memoryType || "",
-          memory.title || "",
-          memory.summary || "",
-          ...(Array.isArray(memory.tags) ? memory.tags : []),
-          ...(Array.isArray(memory.toolNames) ? memory.toolNames : []),
-          ...(Array.isArray(memory.relatedRecordIds) ? memory.relatedRecordIds : []),
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return text.includes(normalizedQuery);
-      })
-    ).slice(0, limit);
-
-    return {
-      query,
-      count: memories.length,
-      memories: memories.map(summarizeMemory),
-    };
-  }
-
-  function getStructuredMemoryById(config, id) {
-    const normalizedId = String(id || "").trim();
-    const data = readStructuredMemoryData(config);
-    const memory = data.memories.find((item) => item.id === normalizedId) || null;
-
-    return {
-      id: normalizedId,
-      found: Boolean(memory),
-      memory,
+      groupKey: memory.groupKey || "",
     };
   }
 
@@ -377,7 +333,11 @@
       ].includes(tag);
     }) || "";
 
-    return `${type}::${topicTag}`;
+    if (topicTag) {
+      return `${type}::${topicTag}`;
+    }
+
+    return `${type}::${memory.title || ""}`;
   }
 
   function canCompressMemory(memory) {
@@ -400,6 +360,7 @@
     const head = sorted[0];
     const title = head.title;
     const memoryType = head.memoryType;
+    const groupKey = buildCompressionGroupKey(head);
     const summary = truncateText(
       uniqueStrings(sorted.map((memory) => memory.summary)).join(" "),
       500
@@ -422,6 +383,7 @@
       isCompressed: true,
       compressedFromCount: sorted.length,
       sourceMemoryIds: sorted.map((memory) => memory.id),
+      groupKey,
     };
   }
 
@@ -446,34 +408,136 @@
     }
 
     let appended = null;
+    let changed = false;
 
-    for (const group of groups.values()) {
+    for (const [groupKey, group] of groups.entries()) {
       if (group.length < 2) {
         continue;
       }
 
-      const sourceMemoryIds = group.map((memory) => memory.id).sort().join("|");
+      const compressed = buildCompressedMemory(group);
+      compressed.groupKey = groupKey;
 
-      const exists = data.memories.some((memory) => {
-        return memory.isCompressed
-          && Array.isArray(memory.sourceMemoryIds)
-          && memory.sourceMemoryIds.slice().sort().join("|") === sourceMemoryIds;
+      // 删除同 groupKey 的旧 compressed memory，只保留最新压缩结果。
+      const beforeCount = data.memories.length;
+      data.memories = data.memories.filter((memory) => {
+        return !(memory.isCompressed && memory.groupKey === groupKey);
       });
 
-      if (exists) {
-        continue;
+      if (data.memories.length !== beforeCount) {
+        changed = true;
       }
 
-      const compressed = buildCompressedMemory(group);
       data.memories.push(compressed);
       appended = compressed;
+      changed = true;
     }
 
-    if (appended) {
+    if (changed) {
       writeStructuredMemoryData(config, data);
     }
 
     return appended;
+  }
+
+  function dedupeMemoriesForDisplay(memories) {
+    const sorted = sortMemoriesByPriority(memories);
+    const compressedByGroup = new Map();
+    const rawByGroup = new Map();
+    const noGroupMemories = [];
+
+    for (const memory of sorted) {
+      const groupKey = String(memory.groupKey || "").trim();
+
+      if (!groupKey) {
+        noGroupMemories.push(memory);
+        continue;
+      }
+
+      if (memory.isCompressed) {
+        if (!compressedByGroup.has(groupKey)) {
+          compressedByGroup.set(groupKey, memory);
+        }
+        continue;
+      }
+
+      if (!rawByGroup.has(groupKey)) {
+        rawByGroup.set(groupKey, memory);
+      }
+    }
+
+    const merged = [];
+
+    // 如果某个 group 有 compressed，就只保留 compressed。
+    for (const [groupKey, memory] of compressedByGroup.entries()) {
+      merged.push(memory);
+      rawByGroup.delete(groupKey);
+    }
+
+    // 只有不存在 compressed 的 group，才展示 raw。
+    for (const memory of rawByGroup.values()) {
+      merged.push(memory);
+    }
+
+    // 没有 groupKey 的记忆单独保留。
+    for (const memory of noGroupMemories) {
+      merged.push(memory);
+    }
+
+    return sortMemoriesByPriority(merged);
+  }
+
+
+  function listRecentStructuredMemories(config, options = {}) {
+    const limit = Math.max(1, Math.min(Number(options.limit || 5), 20));
+    const data = readStructuredMemoryData(config);
+    const deduped = dedupeMemoriesForDisplay(data.memories).slice(0, limit);
+
+    return {
+      count: deduped.length,
+      memories: deduped.map(summarizeMemory),
+    };
+  }
+
+  function searchStructuredMemories(config, query, options = {}) {
+    const normalizedQuery = String(query || "").trim().toLowerCase();
+    const limit = Math.max(1, Math.min(Number(options.limit || 10), 20));
+    const data = readStructuredMemoryData(config);
+
+    const matched = data.memories.filter((memory) => {
+      const text = [
+        memory.memoryType || "",
+        memory.title || "",
+        memory.summary || "",
+        ...(Array.isArray(memory.tags) ? memory.tags : []),
+        ...(Array.isArray(memory.toolNames) ? memory.toolNames : []),
+        ...(Array.isArray(memory.relatedRecordIds) ? memory.relatedRecordIds : []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(normalizedQuery);
+    });
+
+    const deduped = dedupeMemoriesForDisplay(matched).slice(0, limit);
+
+    return {
+      query,
+      count: deduped.length,
+      memories: deduped.map(summarizeMemory),
+    };
+  }
+
+  function getStructuredMemoryById(config, id) {
+    const normalizedId = String(id || "").trim();
+    const data = readStructuredMemoryData(config);
+    const memory = data.memories.find((item) => item.id === normalizedId) || null;
+
+    return {
+      id: normalizedId,
+      found: Boolean(memory),
+      memory,
+    };
   }
 
   function buildStructuredMemoryContextText(config, options = {}) {
