@@ -131,6 +131,33 @@
       };
     }
 
+    if (toolName === "list_records_by_type") {
+      const records = Array.isArray(toolResult.records) ? toolResult.records : [];
+
+      return {
+        type: toolResult.type,
+        count: toolResult.count,
+        records: records.slice(0, 5).map((record)=>{
+          return {
+            id:record.id,
+            type:record.type,
+            date:record.date,
+            week:record.week,
+            topic:record.topic,
+            project:record.project,
+          };
+        }),
+      };
+    }
+
+    if (toolName === "get_record_by_id") {
+      return {
+        id: toolResult.id,
+        found: toolResult.found,
+        record: toolResult.record ? summarizeRecord(toolResult.record) : null,
+      };
+    }
+
     if (toolName === "generate_weekly_report") {
       return {
         week: toolResult.week,
@@ -154,10 +181,14 @@
       "工具选择策略如下：",
       "1. 如果用户提供了明确日期 YYYY-MM-DD，并想知道那天做了什么、有什么记录，优先使用 read_records_by_date。",
       "2. 如果用户想按主题、技能、项目或关键词查找记录，优先使用 search_records。",
-      "3. 如果用户要求某一周的周报或整周总结，优先使用 generate_weekly_report，周格式是 YYYY-Www。",
-      "4. 如果用户问的是 git 仓库状态、分支、diff、最近提交，优先使用 inspect_git。",
-      "5. 如果已经通过工具拿到足够信息，就不要继续调用工具，直接给出简洁、基于事实的最终回答。",
-      "6. 不要虚构不存在的记录、仓库状态或工具结果。",
+      "3. 如果用户想看最近几条 learning 或 devlog 记录，优先使用list_records_by_type。",
+      "4. 如果用户要求最近一条、某一条详情、单条记录总结、最近在学什么、最近主要做了什么，而候选列表本身不含完整内容，必须先用 list_records_by_type 拿到候选 id，再用get_record_by_id 获取单条详情。",
+      "5.不要仅根据候选列表的简要字段直接编造单条记录的详细总结；需要详情时必须调用get_record_by_id。",
+      "6. 如果用户要求某一周的周报或整周总结，优先使用 generate_weekly_report，周格式是 YYYY-Www。",
+      "7. 如果用户问的是 git 仓库状态、分支、diff、最近提交，优先使用 inspect_git。",
+      "8. 如果任务需要先列候选、再查看单条详情，请按多步方式调用工具，不要试图一步猜出完整内容。",
+      "9. 如果已经通过工具拿到足够信息，就不要继续调用工具，直接给出简洁、基于事实的最终回答。",
+      "10. 不要虚构不存在的记录、仓库状态或工具结果。",
     ].join("\n");
   }
 
@@ -246,7 +277,7 @@
     ];
 
     for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1) {
-      log('step ${stepIndex + 1}: requesting model response');
+      log(`step ${stepIndex + 1}: requesting model response`);
 
       const response = await createAgentResponse({
         input: conversationInput,
@@ -254,12 +285,12 @@
       });
 
       const functionCalls = getFunctionCallsFromResponse(response);
-      log('step ${stepIndex + 1}: response id = ${response.id}');
-      log('step ${stepIndex + 1}: function call count = ${functionCalls.length}');
+      log(`step ${stepIndex + 1}: response id = ${response.id}`);
+      log(`step ${stepIndex + 1}: function call count = ${functionCalls.length}`);
 
       if (functionCalls.length === 0) {
         const finalText = getFinalMessageText(response);
-        log('step ${stepIndex + 1}: final answer generated');
+        log(`step ${stepIndex + 1}: final answer generated`);
 
         return {
           ok: true,
@@ -275,8 +306,8 @@
 
       for (const functionCall of functionCalls) {
         const toolInput = JSON.parse(functionCall.arguments || "{}");
-        log('executing tool: ${functionCall.name}');
-        log('tool input: ${JSON.stringify(toolInput)}');
+        log(`executing tool: ${functionCall.name}`);
+        log(`tool input: ${JSON.stringify(toolInput)}`);
 
         const toolResult = await registry.executeToolCall(
           functionCall.name,
@@ -288,7 +319,7 @@
           toolResult
         );
 
-        log('tool output summary: ${JSON.stringify(toolResultForModel)}');
+        log(`tool output summary: ${JSON.stringify(toolResultForModel)}`);
 
         executedSteps.push({
           toolName: functionCall.name,
@@ -303,7 +334,7 @@
           content: [
             {
               type: "output_text",
-              text: '我调用了工具 ${functionCall.name}，参数是${functionCall.arguments}。',
+              text: `我调用了工具 ${functionCall.name}，参数是${functionCall.arguments}。`,
             },
           ],
         });
@@ -314,7 +345,7 @@
             {
               type: "input_text",
               text: [
-                '工具 ${functionCall.name} 返回结果如下：',
+                `工具 ${functionCall.name} 返回结果如下：`,
                 JSON.stringify(toolResultForModel, null, 2),
                 "",
                 "请基于这些结果继续回答原始问题。",
@@ -325,7 +356,7 @@
       }
     }
 
-    throw new Error('Agent runtime exceeded max tool steps (${maxSteps})');
+    throw new Error(`Agent runtime exceeded max tool steps (${maxSteps})`);
   }
 
   module.exports = {
@@ -334,3 +365,4 @@
     runSingleStepAgent,
     runMultiStepAgent,
   };
+
