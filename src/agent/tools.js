@@ -5,6 +5,11 @@
   const { readData, listRecordsByDate } = require("../infra/store");
   const { inspectGitRepo } = require("../infra/git-inspector");
   const { buildWeeklyReport } = require("../app/weekly-report-cli");
+  const {
+    listRecentStructuredMemories,
+    searchStructuredMemories,
+    getStructuredMemoryById,
+  } = require("../infra/structured-memory-store");
 
   function sortRecordsByCreatedAtDesc(records) {
     return [...records].sort((left, right) => {
@@ -14,7 +19,7 @@
     });
   }
 
- function summarizeRecord(record) {
+  function summarizeRecord(record) {
     return {
       id: record.id,
       type: record.type,
@@ -43,18 +48,13 @@
     };
   }
 
-
-
   function createTools(config) {
     return [
       {
         name: "read_records_by_date",
         description: [
           "Use this tool when the user wants records for one specific calendar date.",
-          "Typical requests include: 查看某一天的记录, 那天做了什么, 某日学了什么, 某日开发了什么.",
           "Input must include date in YYYY-MM-DD format.",
-          "Prefer this tool over search_records when the user already provides an exact date.",
-          "Do not use this tool for ISO week requests such as YYYY-W17; use generate_weekly_report instead.",
         ].join(" "),
         inputSchema: {
           type: "object",
@@ -80,11 +80,8 @@
       {
         name: "search_records",
         description: [
-          "Use this tool when the user wants to search local records by keyword,topic, project, summary, or skill.",
-          "Typical requests include: 搜索某个主题, 查和 Node.js 相关的记录, 找某个项目的开发日志, 检索某项技能.",
-          "Input must include a natural language or keyword query string.",
-          "Prefer this tool when the user does not provide an exact date and instead describes a concept, keyword, skill, or project name.",
-          "Do not use this tool for exact single-date lookup if a YYYY-MM-DD date is already given; use read_records_by_date instead.",
+          "Use this tool when the user wants to search local records by keyword, topic, project, summary, or skill.",
+          "Input must include a query string.",
         ].join(" "),
         inputSchema: {
           type: "object",
@@ -125,10 +122,7 @@
         name: "list_records_by_type",
         description: [
           "Use this tool when the user wants recent records of one type, such as recent learning records or recent devlog records.",
-          "Typical requests include: 最近几条 learning 记录, 最近几条开发日志, 最近在学什么, 最近做了哪些开发工作.",
-          "Input type must be one of: learning or devlog.",
-          "Use this tool first when you need candidate record ids before choosing one record to inspect in detail with get_record_by_id.",
-          "Prefer this tool over search_records when the user asks for recent items by record type rather than keyword search.",
+          "Input type must be learning or devlog.",
         ].join(" "),
         inputSchema: {
           type: "object",
@@ -150,23 +144,20 @@
             data.records.filter((record) => record.type === type)
           );
 
-          
           return {
             type,
             count: records.length,
-            records: records.slice(0, 10).map(summarizeRecordCandidate).filter(Boolean),
+            records: records
+              .slice(0, 10)
+              .map(summarizeRecordCandidate)
+              .filter(Boolean),
           };
-
         },
       },
       {
         name: "get_record_by_id",
         description: [
           "Use this tool when you already know a specific record id and need the full detail of that one record.",
-          "Typical requests include: 查看某条记录详情, 读取刚才候选列表中的一条记录, 根据 id 获取完整内容.",
-          "Input must include a record id string.",
-          "Use this tool after list_records_by_type or other retrieval steps when you need one record in full detail before answering.",
-          "Do not use this tool if you do not already have a concrete record id.",
         ].join(" "),
         inputSchema: {
           type: "object",
@@ -192,13 +183,81 @@
         },
       },
       {
+        name: "list_recent_memories",
+        description: [
+          "Use this tool when the user asks what has been learned or discussed recently across sessions.",
+          "This tool returns recent structured long-term memories rather than raw records.",
+          "Always provide limit as a string number such as 5.",
+        ].join(" "),
+        inputSchema: {
+          type: "object",
+          properties: {
+            limit: {
+              type: "string",
+              description: "Optional result limit as a string number, for example 5",
+            },
+          },
+          required: ["limit"],
+          additionalProperties: false,
+        },
+        execute: async (input) => {
+          const limit = Number(String(input.limit || "").trim() || "5");
+
+          return listRecentStructuredMemories(config, { limit });
+        },
+      },
+      {
+        name: "search_memories",
+        description: [
+          "Use this tool when the user asks about long-term themes, recent learning focus, recent project focus, or previously summarized conclusions.",
+          "Use this before raw record search when the question is about persistent memory rather than one exact record.",
+          "Always provide limit as a string number such as 5.",
+        ].join(" "),
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Keyword query for structured long-term memories",
+            },
+            limit: {
+              type: "string",
+              description: "Optional result limit as a string number, for example 5",
+            },
+          },
+          required: ["query","limit"],
+          additionalProperties: false,
+        },
+        execute: async (input) => {
+          const limit = Number(String(input.limit || "").trim() || "10");
+
+          return searchStructuredMemories(config, input.query, { limit });
+        },
+      },
+      {
+        name: "get_memory_by_id",
+        description: [
+          "Use this tool when you already know a structured memory id and need its full detail.",
+        ].join(" "),
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "Exact structured memory id",
+            },
+          },
+          required: ["id"],
+          additionalProperties: false,
+        },
+        execute: async (input) => {
+          return getStructuredMemoryById(config, input.id);
+        },
+      },
+      {
         name: "inspect_git",
         description: [
           "Use this tool when the user asks about a git repository status, branch,diff, or recent commits.",
-          "Typical requests include: 查看仓库状态, 检查 git diff, 最近提交, 当前分支,分析某个 repo.",
-          "Input must include a repository path, absolute or relative.",
-          "Prefer this tool only for repository inspection tasks, not for searching learning or devlog records.",
-          "Do not use this tool for weekly reports, date-based record lookup, or keyword search in local memory records.",
         ].join(" "),
         inputSchema: {
           type: "object",
@@ -219,10 +278,6 @@
         name: "generate_weekly_report",
         description: [
           "Use this tool when the user wants a weekly summary or weekly report for one ISO week.",
-          "Typical requests include: 生成周报, 查看某周总结, 汇总一周做了什么.",
-          "Input must include week in ISO week format YYYY-Www, such as 2026-W17.",
-          "Prefer this tool over read_records_by_date when the user asks about a whole week instead of one exact date.",
-          "Do not use this tool for single-date requests or free-text keyword search.",
         ].join(" "),
         inputSchema: {
           type: "object",

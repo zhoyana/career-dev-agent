@@ -110,6 +110,24 @@
     };
   }
 
+  function summarizeMemory(memory) {
+    if (!memory || typeof memory !== "object") {
+      return memory;
+    }
+
+    return {
+      id: memory.id,
+      memoryType: memory.memoryType,
+      title: memory.title,
+      summary: truncateText(memory.summary || "", 220),
+      tags: Array.isArray(memory.tags) ? memory.tags.slice(0, 8) : [],
+      relatedRecordIds: Array.isArray(memory.relatedRecordIds)
+        ? memory.relatedRecordIds.slice(0, 5)
+        : [],
+      createdAt: memory.createdAt,
+    };
+  }
+
   function serializeToolResultForModel(toolName, toolResult) {
     if (toolName === "read_records_by_date") {
       const records = Array.isArray(toolResult.records) ? toolResult.records : [];
@@ -137,14 +155,14 @@
       return {
         type: toolResult.type,
         count: toolResult.count,
-        records: records.slice(0, 5).map((record)=>{
+        records: records.slice(0, 5).map((record) => {
           return {
-            id:record.id,
-            type:record.type,
-            date:record.date,
-            week:record.week,
-            topic:record.topic,
-            project:record.project,
+            id: record.id,
+            type: record.type,
+            date: record.date,
+            week: record.week,
+            topic: record.topic,
+            project: record.project,
           };
         }),
       };
@@ -155,6 +173,23 @@
         id: toolResult.id,
         found: toolResult.found,
         record: toolResult.record ? summarizeRecord(toolResult.record) : null,
+      };
+    }
+
+    if (toolName === "list_recent_memories" || toolName === "search_memories") {
+      const memories = Array.isArray(toolResult.memories) ? toolResult.memories : [];
+
+      return {
+        count: toolResult.count,
+        memories: memories.slice(0, 5).map(summarizeMemory),
+      };
+    }
+
+    if (toolName === "get_memory_by_id") {
+      return {
+        id: toolResult.id,
+        found: toolResult.found,
+        memory: toolResult.memory ? summarizeMemory(toolResult.memory) : null,
       };
     }
 
@@ -177,19 +212,64 @@
     return [
       "你是一个本地 Career Dev Agent。",
       "你的职责是优先通过本地工具获取事实，再基于事实回答用户问题。",
-      "如果用户的问题需要查看本地记录或仓库状态，优先调用工具，不要直接猜测。",
+      "如果用户的问题需要查看本地记录、长期记忆或仓库状态，优先调用工具，不要直接猜测。",
+      "结构化长期记忆可以作为长期线索，但如果问题依赖具体事实，仍然优先调用 records 工具核实。",
       "工具选择策略如下：",
-      "1. 如果用户提供了明确日期 YYYY-MM-DD，并想知道那天做了什么、有什么记录，优先使用 read_records_by_date。",
-      "2. 如果用户想按主题、技能、项目或关键词查找记录，优先使用 search_records。",
-      "3. 如果用户想看最近几条 learning 或 devlog 记录，优先使用list_records_by_type。",
-      "4. 如果用户要求最近一条、某一条详情、单条记录总结、最近在学什么、最近主要做了什么，而候选列表本身不含完整内容，必须先用 list_records_by_type 拿到候选 id，再用get_record_by_id 获取单条详情。",
-      "5.不要仅根据候选列表的简要字段直接编造单条记录的详细总结；需要详情时必须调用get_record_by_id。",
-      "6. 如果用户要求某一周的周报或整周总结，优先使用 generate_weekly_report，周格式是 YYYY-Www。",
-      "7. 如果用户问的是 git 仓库状态、分支、diff、最近提交，优先使用 inspect_git。",
-      "8. 如果任务需要先列候选、再查看单条详情，请按多步方式调用工具，不要试图一步猜出完整内容。",
-      "9. 如果已经通过工具拿到足够信息，就不要继续调用工具，直接给出简洁、基于事实的最终回答。",
-      "10. 不要虚构不存在的记录、仓库状态或工具结果。",
+      "1. 明确日期 YYYY-MM-DD 的记录查询，优先 read_records_by_date。",
+      "2. 关键词、技能、项目检索，优先 search_records。",
+      "3. 最近几条 learning 或 devlog，优先 list_records_by_type。",
+      "4. 已知 record id 后查详情，使用 get_record_by_id。",
+      "5. 用户问最近学了什么、长期关注什么、最近的项目重点是什么时，可优先查memories。",
+      "6. 最近长期记忆列表用 list_recent_memories，按关键词查长期记忆用search_memories，已知 memory id 查详情用 get_memory_by_id。",
+      "7. 周报 YYYY-Www 用 generate_weekly_report。",
+      "8. git 仓库状态问题用 inspect_git。",
+      "9. 如果任务需要先列候选、再查详情，请按多步方式调用工具。",
+      "10. 信息足够后直接给最终回答，不要编造事实。",
     ].join("\n");
+  }
+
+  function buildConversationInput({ userInput, contextText }) {
+    const input = [
+      {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text: buildRuntimeSystemPrompt(),
+          },
+        ],
+      },
+    ];
+
+    if (String(contextText || "").trim()) {
+      input.push({
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: [
+              "下面是你可以参考的历史上下文。",
+              "这些内容来自当前会话和结构化长期记忆，只能作为辅助线索。",
+              "如果要回答当前问题，优先使用工具核实事实。",
+              "",
+              String(contextText || "").trim(),
+            ].join("\n"),
+          },
+        ],
+      });
+    }
+
+    input.push({
+      role: "user",
+      content: [
+        {
+          type: "input_text",
+          text: userInput,
+        },
+      ],
+    });
+
+    return input;
   }
 
   async function runRuleBasedAgent({ userInput, registry }) {
@@ -243,7 +323,12 @@
     };
   }
 
-  async function runMultiStepAgent({ userInput, registry, verbose = false }) {
+  async function runMultiStepAgent({
+    userInput,
+    registry,
+    verbose = false,
+    contextText = "",
+  }) {
     const normalizedInput = String(userInput || "").trim();
 
     if (!normalizedInput) {
@@ -255,26 +340,10 @@
     const executedSteps = [];
     const maxSteps = 8;
 
-    const conversationInput = [
-      {
-        role: "system",
-        content: [
-          {
-            type: "input_text",
-            text: buildRuntimeSystemPrompt(),
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: normalizedInput,
-          },
-        ],
-      },
-    ];
+    const conversationInput = buildConversationInput({
+      userInput: normalizedInput,
+      contextText,
+    });
 
     for (let stepIndex = 0; stepIndex < maxSteps; stepIndex += 1) {
       log(`step ${stepIndex + 1}: requesting model response`);
@@ -298,6 +367,7 @@
           userInput: normalizedInput,
           responseId: response.id,
           model: response.model,
+          contextUsed: Boolean(String(contextText || "").trim()),
           stepCount: executedSteps.length,
           steps: executedSteps,
           finalAnswer: finalText,
@@ -365,4 +435,3 @@
     runSingleStepAgent,
     runMultiStepAgent,
   };
-
