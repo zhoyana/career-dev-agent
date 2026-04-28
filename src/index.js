@@ -14,6 +14,7 @@ const { runAgentLlmCommand } = require("./app/agent-llm-cli");
 const { runUpdateRecordCommand } = require("./app/update-record-cli");
 const { runImportChatCommand } = require("./app/import-chat-cli");
 const { runBuildDashboardCommand } = require("./app/build-dashboard-cli");
+const { runAgentRuntimeCommand } = require("./app/agent-runtime-cli");
 
 
 const { runStatsCommand } = require("./app/stats-cli");
@@ -35,6 +36,8 @@ Commands:
   update          按id更新记录
   import-chat     把一段聊天记录转为多条记录
   build-dashboard 创建dashboard
+  agent-runtime       使用 OpenAI tool calling 执行单步 Agent
+  
   
   
   
@@ -54,6 +57,7 @@ Examples:
   node ./bin/career-dev-agent.js update --id RECORD_ID --stdin
   node ./bin/career-dev-agent.js import-chat --stdin --dry-run
   node ./bin/career-dev-agent.js build-dashboard
+  node ./bin/career-dev-agent.js agent-runtime
 
 
 `);
@@ -113,6 +117,12 @@ async function main() {
     return ;
   }
 
+  if (command === "agent-runtime") {
+      await runAgentRuntimeCommand(config);
+      return;
+    }
+
+
   if (command === "update") {
     await runUpdateRecordCommand(config);
     return;
@@ -129,6 +139,8 @@ async function main() {
     await runWeeklyReportCommand(config);
     return;
   }
+
+
 
   if (command === "import-chat") {
     await runImportChatCommand(config);
